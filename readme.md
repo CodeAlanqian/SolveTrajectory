@@ -16,7 +16,7 @@
 
 ## 单方向空气阻力模型
 
-![projectile_model](.\pic\projectile_model.png)
+![projectile_model](./pic/projectile_model.png)
 
 当我们直接瞄准目标点（枪管朝向目标点）时，会有一个下落高度。 
 
