@@ -2,7 +2,7 @@
 
 # 弹道解算
 
-给定目标位置坐标(x,y)，求解**出射角θ（炮台仰角）**
+给定目标位置坐标(x,y,z)，求解**出射角θ（炮台仰角）**
 
 ## 理想弹道模型
 
@@ -11,7 +11,9 @@
 ![projectile](./pic/projectile.png)
 
 
-
+$$
+横轴为s = \sqrt{x^2+y^2},纵轴为z
+$$
 
 
 ## 单方向空气阻力模型
@@ -96,7 +98,7 @@ $$
 $$
 
 $$
-积分得 s = \frac{1}{k}ln(k_1v_{x0}t+1)······式(1)
+积分得 s = \frac{1}{k_1}ln(k_1v_{x0}t+1)······式(1)
 $$
 
 
@@ -120,9 +122,9 @@ $$
 * 循环迭代n次(10-20次)：
   * 计算仰角(pitch)   angle = 枪管指向tempPoint的角度
   * 利于单方向空气阻力模型，计算实际命中点realPoint
-  * 计算误差 deltaH = targetPoint - realPoint
-  * 更新tempPoint = tempPoint + deltaH
-* 得到最终的angle和deltaH
+  * 计算误差 deltaZ = targetPoint - realPoint
+  * 更新tempPoint = tempPoint + deltaZ
+* 得到最终的angle和deltaZ
 
 
 
