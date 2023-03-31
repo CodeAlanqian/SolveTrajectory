@@ -56,14 +56,14 @@ float GimbalContrlGetPitch(float x, float y, float v) {
 }
 
 void GimbalContrlTransform(float *x, float *y, float *z, float *pitch, float *yaw) {
-    *pitch = -GimbalContrlGetPitch(sqrt((*x)*(*x)+(*y)*(*y)), *z, st._v);
-    *yaw = (float) (atan2(*x-st._x , *y - st._y ));
+    *pitch = -GimbalContrlGetPitch(sqrt((*x)*(*x)+(*y)*(*y)), *z-st._z, st._v);
+    *yaw = (float) (atan2(*y - st._y ,  *x-st._x));
 }
 
 //从坐标轴正向看向原点，逆时针方向为正
 
 int main(){
-    float tar_x = 3, tar_y = 2.2, tar_z = 1.0; //target point  s = sqrt(x^2+y^2) 
+    float tar_x = -0.3, tar_y = -0.2, tar_z = -0.1; //target point  s = sqrt(x^2+y^2) 
     float pitch = 0;
     float yaw = 0;
 
@@ -72,6 +72,7 @@ int main(){
     
     GimbalContrlTransform(&tar_x, &tar_y, &tar_z, &pitch, &yaw);
     printf("main %f %f",pitch*180/PI,yaw*180/PI);
+    printf("main %f %f",pitch,yaw);
 
     return 0;
 }
