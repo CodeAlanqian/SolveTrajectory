@@ -8,16 +8,13 @@
 
 struct SolveTrajectory st;
 
-void GimbalContrlInit(float x,float y,float z,float pitch,float yaw, float v, float k) {
-    st._x = x;
-    st._y = y;
-    st._z = z;
-    st.offset_pitch = pitch;
-    st.offset_yaw = yaw;
-    st._v = v;
+void GimbalContrlInit(float pitch,float yaw, float v, float k) {
+    st.current_pitch = pitch;
+    st.current_yaw = yaw;
+    st.current_v = v;
     st._k = k;
     printf("init\n");
-    printf("%f,%f,%f,%f,%f,%f,%f\n",st._x,st._y,st._z,st.offset_pitch,st.offset_yaw,st._v,st._k);
+    printf("%f,%f,%f,%f\n",st.current_pitch,st.current_yaw,st.current_v,st._k);
 }
 
 
@@ -48,30 +45,57 @@ float GimbalContrlGetPitch(float x, float y, float v) {
         break;
     }
     
-    
 
     }
     return angle;
 
 }
 
-void GimbalContrlTransform(float *x, float *y, float *z, float *pitch, float *yaw) {
-    *pitch = -GimbalContrlGetPitch(sqrt((*x)*(*x)+(*y)*(*y)), *z-st._z, st._v);
-    *yaw = (float) (atan2(*y - st._y ,  *x-st._x));
+void GimbalContrlTransform(float x_fromROS, float y_fromROS, float z_fromROS, float *pitch, float *yaw) {
+    float x, y, z;
+    //世界坐标系转换到机器人枪管坐标系
+    float cos_yaw = cos(st.current_yaw);
+    float sin_yaw = sin(st.current_yaw);
+    float cos_pitch = cos(st.current_pitch);
+    float sin_pitch = sin(st.current_pitch);
+
+    x = x_fromROS * cos_yaw *cos_yaw - y_fromROS * sin_yaw * cos_yaw - z_fromROS * sin_pitch + 0.19133;
+    y = x_fromROS * sin_yaw + y_fromROS * cos_yaw;
+    z = x_fromROS * sin_yaw * cos_yaw - y_fromROS * sin_yaw * sin_yaw + z_fromROS * cos_pitch + 0.21265;
+
+
+    *pitch = -GimbalContrlGetPitch(sqrt((x)*(x)+(y)*(y)), z, st.current_v);
+    *yaw = (float) (atan2(y ,  x));
 }
 
 //从坐标轴正向看向原点，逆时针方向为正
 
 int main(){
-    float tar_x = -0.3, tar_y = -0.2, tar_z = -0.1; //target point  s = sqrt(x^2+y^2) 
+    float tar_x = 0.3, tar_y = 0.2, tar_z = 0; //target point  s = sqrt(x^2+y^2) 
     float pitch = 0;
     float yaw = 0;
 
     //机器人初始状态
-    GimbalContrlInit(0, 0, 0, 0, 0, 25, 0.05);
+    GimbalContrlInit(0, 0, 25, 0.05);
+    /*
+    /param pitch:rad  传入当前pitch
+    /param yaw:rad    传入当前yaw
+    /param v:m/s      传入当前弹速
+    /param k:弹道系数
+    */
     
-    GimbalContrlTransform(&tar_x, &tar_y, &tar_z, &pitch, &yaw);
-    printf("main %f %f",pitch*180/PI,yaw*180/PI);
+    GimbalContrlTransform(tar_x, tar_y, tar_z, &pitch, &yaw);
+    /*
+    /param x_fromROS:ROS坐标系下的x
+    /param y_fromROS:ROS坐标系下的y
+    /param z_fromROS:ROS坐标系下的z
+    /param pitch:rad  传出pitch
+    /param yaw:rad    传出yaw
+    */
+
+
+
+    printf("main %f %f ",pitch*180/PI,yaw*180/PI);
     printf("main %f %f",pitch,yaw);
 
     return 0;
