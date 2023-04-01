@@ -8,7 +8,7 @@
 
 struct SolveTrajectory st;
 
-void GimbalContrlInit(float pitch,float yaw, float v, float k) {
+void GimbalControlInit(float pitch,float yaw, float v, float k) {
     st.current_pitch = pitch;
     st.current_yaw = yaw;
     st.current_v = v;
@@ -18,7 +18,7 @@ void GimbalContrlInit(float pitch,float yaw, float v, float k) {
 }
 
 
-float GimbalContrlBulletModel(float x, float v, float angle) { //x:m,v:m/s,angle:rad
+float GimbalControlBulletModel(float x, float v, float angle) { //x:m,v:m/s,angle:rad
     float t, y;
     t = (float)((exp(st._k * x) - 1) / (st._k * v * cos(angle)));
     y = (float)(v * sin(angle) * t - GRAVITY * t * t / 2);
@@ -27,7 +27,7 @@ float GimbalContrlBulletModel(float x, float v, float angle) { //x:m,v:m/s,angle
 }
 
 //x:distance , y: height
-float GimbalContrlGetPitch(float x, float y, float v) {
+float GimbalControlGetPitch(float x, float y, float v) {
     float y_temp, y_actual, dy;
     float angle;
     y_temp = y;
@@ -37,7 +37,7 @@ float GimbalContrlGetPitch(float x, float y, float v) {
     int i = 0;
     for (i = 0; i < 20; i++) {
     angle = (float) atan2(y_temp, x);
-    y_actual = GimbalContrlBulletModel(x, v, angle);
+    y_actual = GimbalControlBulletModel(x, v, angle);
     dy = y - y_actual;
     y_temp = y_temp + dy;
     printf("iteration num %d: angle %f,temp target y:%f,err of y:%f\n",i+1,angle*180/PI,y_temp,dy);
@@ -51,7 +51,7 @@ float GimbalContrlGetPitch(float x, float y, float v) {
 
 }
 
-void GimbalContrlTransform(float x_fromROS, float y_fromROS, float z_fromROS, float *pitch, float *yaw) {
+void GimbalControlTransform(float x_fromROS, float y_fromROS, float z_fromROS, float *pitch, float *yaw) {
     float x, y, z;
     //世界坐标系转换到机器人枪管坐标系
     float cos_yaw = cos(st.current_yaw);
@@ -64,7 +64,7 @@ void GimbalContrlTransform(float x_fromROS, float y_fromROS, float z_fromROS, fl
     z = x_fromROS * sin_yaw * cos_yaw - y_fromROS * sin_yaw * sin_yaw + z_fromROS * cos_pitch + 0.21265;
 
 
-    *pitch = -GimbalContrlGetPitch(sqrt((x)*(x)+(y)*(y)), z, st.current_v);
+    *pitch = -GimbalControlGetPitch(sqrt((x)*(x)+(y)*(y)), z, st.current_v);
     *yaw = (float) (atan2(y ,  x));
 }
 
@@ -76,7 +76,7 @@ int main(){
     float yaw = 0;
 
     //机器人初始状态
-    GimbalContrlInit(0, 0, 25, 0.05);
+    GimbalControlInit(0, 0, 25, 0.1);
     /*
     /param pitch:rad  传入当前pitch
     /param yaw:rad    传入当前yaw
@@ -84,7 +84,7 @@ int main(){
     /param k:弹道系数
     */
     
-    GimbalContrlTransform(tar_x, tar_y, tar_z, &pitch, &yaw);
+    GimbalControlTransform(tar_x, tar_y, tar_z, &pitch, &yaw);
     /*
     /param x_fromROS:ROS坐标系下的x
     /param y_fromROS:ROS坐标系下的y
