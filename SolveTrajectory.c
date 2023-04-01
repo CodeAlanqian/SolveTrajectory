@@ -59,9 +59,9 @@ void GimbalControlTransform(float x_fromROS, float y_fromROS, float z_fromROS, f
     float cos_pitch = cos(st.current_pitch);
     float sin_pitch = sin(st.current_pitch);
 
-    x = x_fromROS * cos_yaw *cos_yaw - y_fromROS * sin_yaw * cos_yaw - z_fromROS * sin_pitch + 0.19133;
+    x = x_fromROS * cos_yaw *cos_pitch - y_fromROS * sin_yaw * cos_pitch - z_fromROS * sin_pitch + 0.19133;
     y = x_fromROS * sin_yaw + y_fromROS * cos_yaw;
-    z = x_fromROS * sin_yaw * cos_yaw - y_fromROS * sin_yaw * sin_yaw + z_fromROS * cos_pitch + 0.21265;
+    z = x_fromROS * sin_yaw * cos_pitch - y_fromROS * sin_yaw * sin_pitch + z_fromROS * cos_pitch + 0.21265;
 
 
     *pitch = -GimbalControlGetPitch(sqrt((x)*(x)+(y)*(y)), z, st.current_v);
