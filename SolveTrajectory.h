@@ -16,6 +16,9 @@ struct SolveTrajectory
 extern void GimbalControlInit(float pitch,float yaw, float v, float k);
 extern float GimbalControlBulletModel(float x, float v, float angle);
 extern float GimbalControlGetPitch(float x, float y, float v);
-extern void GimbalControlTransform(float x_fromROS, float y_fromROS, float z_fromROS, float *pitch, float *yaw);
+
+extern void GimbalControlTransform(float xw, float yw, float zw, 
+                                float vxw, float vyw, float vzw, 
+                                int timestamp_start, float *pitch, float *yaw);
 
 #endif /*__SOLVETRAJECTORY_H__*/
