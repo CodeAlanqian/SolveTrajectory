@@ -76,31 +76,13 @@ void GimbalControlTransform(float xw, float yw, float zw,
                             float vxw, float vyw, float vzw,
                             int timestamp_start, float *pitch, float *yaw)
 {
-    float x, y, z, vx, vy, vz;
+    float vx, vy, vz;
+    float x_static = 0.19133;
+    float z_static = 0.21265;
     int timestamp_now = timestamp_start + 200; // 假设当前时间戳=开始时间戳+1ms
     // TODO：获取当前时间戳
-
-    // 世界坐标系转换到机器人枪管坐标系
-    float cos_yaw = cos(st.current_yaw);
-    float sin_yaw = sin(st.current_yaw);
-    float cos_pitch = cos(st.current_pitch);
-    float sin_pitch = sin(st.current_pitch);
-
-    vx = vxw * cos_yaw * cos_pitch - vyw * sin_yaw * cos_pitch - vzw * sin_pitch;
-    vy = vxw * sin_yaw + vyw * cos_yaw;
-    // vz = vxw * sin_yaw * cos_pitch - vyw * sin_yaw * sin_pitch + vzw * cos_pitch;
-    // XOY平面运动，不考虑z方向速度
-
-    // old
-    //  x = xw * cos_yaw *cos_pitch - yw * sin_yaw * cos_pitch - zw * sin_pitch + 0.19133;
-    //  y = xw * sin_yaw + yw * cos_yaw;
-    //  z = xw * sin_yaw * cos_pitch - yw * sin_yaw * sin_pitch + zw * cos_pitch + 0.21265;
-
-    x = xw * cos_yaw * cos_pitch - yw * sin_yaw * -(zw + 0.21265) * cos_yaw * sin_pitch + 0.19133;
-    y = xw * sin_yaw * cos_pitch + yw * cos_yaw - zw * sin_yaw * sin_pitch;
-    z = xw * sin_pitch + (zw + 0.21265) * cos_pitch;
-
-    *pitch = -GimbalControlGetPitch(sqrt((x) * (x) + (y) * (y)), z, st.current_v);
+    
+    *pitch = -GimbalControlGetPitch(sqrt((xw) * (xw) + (yw) * (yw))-x_static, z_static-zw, st.current_v);
     // 线性预测
     // int timeDelay = timestamp_now - timestamp_start + t; // 计算通信及解算时间戳延时+子弹飞行时间
     // int timeDelay = t; //子弹飞行时间
@@ -108,7 +90,7 @@ void GimbalControlTransform(float xw, float yw, float zw,
     // x = x + vx * (float)(timeDelay / 1000.0);
     // y = y + vy * (float)(timeDelay / 1000.0);
 
-    *yaw = (float)(atan2(y, x));
+    *yaw = (float)(atan2(yw, xw));
 }
 
 // 从坐标轴正向看向原点，逆时针方向为正
@@ -134,8 +116,8 @@ int main()
     /param x_fromROS:ROS坐标系下的x
     /param y_fromROS:ROS坐标系下的y
     /param z_fromROS:ROS坐标系下的z
-    /param pitch:rad  传出pitch
-    /param yaw:rad    传出yaw
+    /param pitch:rad  传出pitch目标值
+    /param yaw:rad    传出yaw目标值
     */
 
     printf("main %f %f ", pitch * 180 / PI, yaw * 180 / PI);
