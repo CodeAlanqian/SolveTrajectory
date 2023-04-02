@@ -7,8 +7,11 @@
 #include "SolveTrajectory.h"
 
 struct SolveTrajectory st;
-float t = 0.0f;
+
+float t = 0.0f; // 飞行时间
+
 /*
+@brief 初始化
 @param pitch:rad
 @param yaw:rad
 @param v:m/s
@@ -24,9 +27,10 @@ void GimbalControlInit(float pitch, float yaw, float v, float k)
 }
 
 /*
-@param x:m
-@param v:m/s
-@param angle:rad
+@brief 弹道模型
+@param x:m 距离
+@param v:m/s 速度
+@param angle:rad 角度
 @return y:m
 */
 float GimbalControlBulletModel(float x, float v, float angle)
@@ -38,7 +42,13 @@ float GimbalControlBulletModel(float x, float v, float angle)
     return y;
 }
 
-// x:distance , y: height
+/*
+@brief pitch轴解算
+@param x:m 距离
+@param y:m 高度
+@param v:m/s
+@return angle_pitch:rad
+*/
 float GimbalControlGetPitch(float x, float y, float v)
 {
     float y_temp, y_actual, dy;
@@ -61,7 +71,8 @@ float GimbalControlGetPitch(float x, float y, float v)
     return angle_pitch;
 }
 
-/*GimbalControlTransform()
+/*
+@brief 世界坐标系转换到云台坐标系
 @param xw:ROS坐标系下的x
 @param yw:ROS坐标系下的y
 @param zw:ROS坐标系下的z
@@ -76,19 +87,19 @@ void GimbalControlTransform(float xw, float yw, float zw,
                             float vxw, float vyw, float vzw,
                             int timestamp_start, float *pitch, float *yaw)
 {
-    float vx, vy, vz;
     float x_static = 0.19133;
     float z_static = 0.21265;
-    int timestamp_now = timestamp_start + 200; // 假设当前时间戳=开始时间戳+1ms
+    int timestamp_now = timestamp_start + 200; // 假设当前时间戳=开始时间戳+200ms
     // TODO：获取当前时间戳
     
-    *pitch = -GimbalControlGetPitch(sqrt((xw) * (xw) + (yw) * (yw))-x_static, z_static-zw, st.current_v);
     // 线性预测
-    // int timeDelay = timestamp_now - timestamp_start + t; // 计算通信及解算时间戳延时+子弹飞行时间
-    // int timeDelay = t; //子弹飞行时间
-
-    // x = x + vx * (float)(timeDelay / 1000.0);
-    // y = y + vy * (float)(timeDelay / 1000.0);
+    // 计算通信及解算时间戳延时+子弹飞行时间  考虑了200ms的通信延时
+    float timeDelay = (float)((timestamp_now - timestamp_start)/1000.0) + t; 
+    // float timeDelay = t; //子弹飞行时间
+    zw = zw + vzw * timeDelay;
+    *pitch = -GimbalControlGetPitch(sqrt((xw) * (xw) + (yw) * (yw)) - x_static, z_static - zw, st.current_v);
+    xw = xw + vxw * timeDelay;
+    yw = yw + vyw * timeDelay ;
 
     *yaw = (float)(atan2(yw, xw));
 }
@@ -97,28 +108,16 @@ void GimbalControlTransform(float xw, float yw, float zw,
 
 int main()
 {
-    float tar_x = 0.3, tar_y = 0.2, tar_z = 0;    // target point  s = sqrt(x^2+y^2)
+    float tar_x = 0.3, tar_y = 0.2, tar_z = 0.1;    // target point  s = sqrt(x^2+y^2)
     float tar_vx = 0.1, tar_vy = 0.1, tar_vz = 0; // target velocity
     float pitch = 0;
     float yaw = 0;
     int timestamp = 1;
     // 机器人初始状态
-    GimbalControlInit(0, 0, 25, 0.1);
-    /*
-    /param pitch:rad  传入当前pitch
-    /param yaw:rad    传入当前yaw
-    /param v:m/s      传入当前弹速
-    /param k:弹道系数
-    */
-
+    GimbalControlInit(0, 0, 25, 0.29);
+    
     GimbalControlTransform(tar_x, tar_y, tar_z, tar_vx, tar_vy, tar_vz, timestamp, &pitch, &yaw);
-    /*
-    /param x_fromROS:ROS坐标系下的x
-    /param y_fromROS:ROS坐标系下的y
-    /param z_fromROS:ROS坐标系下的z
-    /param pitch:rad  传出pitch目标值
-    /param yaw:rad    传出yaw目标值
-    */
+
 
     printf("main %f %f ", pitch * 180 / PI, yaw * 180 / PI);
     printf("main %f %f", pitch, yaw);
