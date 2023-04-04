@@ -1,5 +1,3 @@
-
-
 # 弹道解算
 
 给定目标位置坐标(x,y,z)，求解**出射角θ（炮台仰角）**
@@ -10,35 +8,27 @@
 
 ![projectile](./pic/projectile.png)
 
-
 $$
 横轴为s = \sqrt{x^2+y^2},纵轴为z
 $$
-
 
 ## 单方向空气阻力模型
 
 ![projectile_model](./pic/projectile_model.png)
 
-当我们直接瞄准目标点（枪管朝向目标点）时，会有一个下落高度。 
+当我们直接瞄准目标点（枪管朝向目标点）时，会有一个下落高度。
 
 我们将利用这个**下落高度**进行**迭代补偿**。
-
-
 
 考虑到1v1近战，距离较近，枪管倾斜角度不会过大，因此只考虑竖直方向的重力和水平方向的空气阻力
 
 设发射速度为 v0 倾斜角为 θ
-
-
 
 竖直方向(z)：
 
 $$
 z = v_0tsinθ - \frac{1}{2}gt^2
 $$
-
-
 
 水平方向(s)：
 
@@ -47,7 +37,7 @@ s = \sqrt{x^2+y^2}
 $$
 
 $$
-空气阻力模型: f = \frac{CρSv_s^2}{2}  
+空气阻力模型: f = \frac{CρSv_s^2}{2}
 $$
 
 C为球体在空气中的摩擦系数 一般取值0.47
@@ -56,7 +46,12 @@ C为球体在空气中的摩擦系数 一般取值0.47
 
 S为接触面积
 
+小弹丸参数：
 
+质量 ：3.2g±0.1g
+尺寸 ：16.8mm±0.2mm
+
+算得小弹丸$k_1=0.076$
 
 
 $$
@@ -64,13 +59,12 @@ v_s = v_0cosθ
 $$
 
 $$
-简化得:f_s = k_0v_s^2·····k_0=\frac{CρS}{2}  
+简化得:f_s = k_0v_s^2·····k_0=\frac{CρS}{2}
 $$
 
 $$
 \frac{-f_s}{m}= a =\frac{dv_s}{dt}
 $$
-
 
 $$
 \frac{-k_0v_s2}{m}=\frac{dv_s}{dt}
@@ -88,7 +82,6 @@ $$
 积分得 k_1t + C = \frac{1}{v_s}
 $$
 
-
 $$
 由 v_s(t=0) = v_{x0} = v_0cosθ 得 C = \frac{1}{v_{x0}}
 $$
@@ -101,34 +94,26 @@ $$
 积分得 s = \frac{1}{k_1}ln(k_1v_{x0}t+1)······式(1)
 $$
 
-
-
-
 ## 迭代重力-空气阻力补偿
 
-------
+---
 
 迭代过程：
 
 * 设置目标点targetPoint(x, y, z)
+
   * 右手坐标系![](./pic/coordinate.jpg)
   * pitch轴 y轴为转轴 从y轴正向看向原点，逆时针方向为pitch轴正方向
   * yaw轴 z轴为转轴 从z轴正向看向原点，逆时针方向为pitch轴正方向
   * ![](./pic/rotations.png)
-
-
-
 * 设置临时目标点tempPoint = targetPoint
 * 循环迭代n次(10-20次)：
+
   * 计算仰角(pitch)   angle = 枪管指向tempPoint的角度
   * 利于单方向空气阻力模型，计算实际命中点realPoint
   * 计算误差 deltaZ = targetPoint - realPoint
   * 更新tempPoint = tempPoint + deltaZ
 * 得到最终的angle和deltaZ
-
-
-
-
 
 更新公式
 
@@ -140,28 +125,19 @@ $$
 实际落点z_{actual} = v_0tsinθ - \frac{1}{2}gt^2
 $$
 
-
 目标落点z0
-
-
-
 
 $$
 计算误差 dz = z_0 - z_{actual}
 $$
 
 $$
-抬高枪口 z_{temp} = z_{temp} + dz ······z_{temp}初始值为z_0 
+抬高枪口 z_{temp} = z_{temp} + dz ······z_{temp}初始值为z_0
 $$
 
 $$
 迭代，使z_{actual}逐渐逼近真实落点z_0
 $$
-
-
-
-
-
 
 ## 参考文献
 
