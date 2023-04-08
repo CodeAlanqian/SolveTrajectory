@@ -102,7 +102,8 @@ void GimbalControlTransform(float xw, float yw, float zw,
     
     //计算四块装甲板的位置
     int use_1 = 1;
-    for (int i=0; i<4; i++) {
+    int i = 0;
+    for (i = 0; i<4; i++) {
         float tmp_yaw = st.tar_yaw + i * PI/2.0;
         float r = use_1 ? st.tar_r1 : st.tar_r2;
         tar_position[i].x = xw - r*cos(tmp_yaw);
@@ -110,21 +111,34 @@ void GimbalControlTransform(float xw, float yw, float zw,
         tar_position[i].z = use_1 ? zw : st.z2;
         use_1 = !use_1;
     }
-
     //计算枪管到目标装甲板yaw小的那个装甲板
+    float yaw_diff_min = fabsf((float)(atan2(tar_position[0].y, tar_position[0].x)) - st.tar_yaw);
+    int index = 0;
+    for (i = 1; i<3; i++)
+    {
+        float temp_yaw_diff = fabsf((float)(atan2(tar_position[i].y, tar_position[i].x)) - st.tar_yaw);
+        if (temp_yaw_diff < yaw_diff_min)
+        {
+            yaw_diff_min = temp_yaw_diff;
+            index = i;
+        }  
+    }
 
     float timeDelay = (float)((timestamp_now - timestamp_start)/1000.0) + t; 
     // float timeDelay = t; //子弹飞行时间
-    zw = zw + vzw * timeDelay;
-    *pitch = -GimbalControlGetPitch(sqrt((xw) * (xw) + (yw) * (yw)) + x_static, zw - z_static, st.current_v);
+    // zw = zw + vzw * timeDelay;
     // *pitch = - atan2(zw - z_static, sqrt((xw) * (xw) + (yw) * (yw)) - x_static); //单纯用于跟随
-    xw = xw + vxw * timeDelay;
-    yw = yw + vyw * timeDelay ;
-    *yaw = (float)(atan2(yw, xw));
+    // xw = xw + vxw * timeDelay;
+    // yw = yw + vyw * timeDelay ;
 
-    *aim_x = tar_position[0].x + vxw * timeDelay;
-    *aim_y = tar_position[0].y + vyw * timeDelay;
-    *aim_z = tar_position[0].z + vzw * timeDelay;
+    *aim_z = tar_position[index].z + vzw * timeDelay;
+    *pitch = -GimbalControlGetPitch(sqrt(tar_position[index].x * tar_position[index].x + tar_position[index].y * tar_position[index].y) + x_static, 
+            tar_position[index].z - z_static, st.current_v);
+
+    *aim_x = tar_position[index].x + vxw * timeDelay;
+    *aim_y = tar_position[index].y + vyw * timeDelay;
+
+    *yaw = (float)(atan2(*aim_y, *aim_x));
 
     }
 
