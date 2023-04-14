@@ -1,3 +1,5 @@
+说明：模型适配陈君【[chenjunnn](https://github.com/chenjunnn)】的整车观测器自瞄的电控部分
+
 # 弹道解算
 
 给定目标位置坐标(x,y,z)，求解**出射角θ（炮台仰角）**
@@ -52,7 +54,6 @@ S为接触面积
 尺寸 ：16.8mm±0.2mm
 
 算得小弹丸$k_1=0.076$
-
 
 $$
 v_s = v_0cosθ
@@ -139,8 +140,30 @@ $$
 迭代，使z_{actual}逐渐逼近真实落点z_0
 $$
 
+## 文件说明
+
+│  .gitignore
+│  ECterminal.c                     电控端文件
+│  readme.md
+│  SolveTrajectory.c              调试文件
+│  SolveTrajectory.h              头文件
+│
+├─.vscode
+│      settings.json
+│      tasks.json
+│
+└─pic
+        coordinate.jpg
+        projectile.png
+        projectile_model.png
+        rotations.png
+
 ## 参考文献
 
 [1]RoboMaster 2019 AI Robot Platform
+
+[2][chenjunnn/rm_auto_aim: RoboMaster 装甲板自动瞄准算法模块 (github.com)](https://github.com/chenjunnn/rm_auto_aim)
+
+[3][chenjunnn/rm_serial_driver: RoboMaster 视觉系统与电控系统的串口通讯模块 (github.com)](https://github.com/chenjunnn/rm_serial_driver)
 
 [RoboMaster/RoboRTS-Tutorial: RoboRTS Tutorial (github.com)](https://github.com/RoboMaster/RoboRTS-Tutorial)
