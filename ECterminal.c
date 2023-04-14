@@ -20,7 +20,7 @@ float t = 0.5f; // 飞行时间
 @param v:m/s
 @param k:弹道系数
 */
-void GimbalControlInit(float pitch, float yaw, float tar_yaw, float v_yaw, float r1, float r2, float z2, float v, float k)
+void GimbalControlInit(float pitch, float yaw, float tar_yaw , float v_yaw, float r1, float r2, float z2, float v, float k)
 {
     st.current_pitch = pitch;
     st.current_yaw = yaw;
@@ -31,7 +31,6 @@ void GimbalControlInit(float pitch, float yaw, float tar_yaw, float v_yaw, float
     st.tar_r1 = r1;
     st.tar_r2 = r2;
     st.z2 = z2;
-    printf("init %f,%f,%f,%f\n", st.current_pitch, st.current_yaw, st.current_v, st._k);
 }
 
 /*
@@ -46,7 +45,6 @@ float GimbalControlBulletModel(float x, float v, float angle)
     float y;
     t = (float)((exp(st._k * x) - 1) / (st._k * v * cos(angle)));
     y = (float)(v * sin(angle) * t - GRAVITY * t * t / 2);
-    printf("model %f %f\n", t, y);
     return y;
 }
 
@@ -70,7 +68,6 @@ float GimbalControlGetPitch(float x, float y, float v)
         y_actual = GimbalControlBulletModel(x, v, angle_pitch);
         dy = 0.3*(y - y_actual);
         y_temp = y_temp + dy;
-        printf("iteration num %d: angle_pitch %f, temp target y:%f, err of y:%f, x:%f\n", i + 1, angle_pitch * 180 / PI, y_temp, dy,x);
         if (fabsf(dy) < 0.00001)
         {
             break;
@@ -103,18 +100,16 @@ void GimbalControlTransform(float xw, float yw, float zw,
     float z_static = 0.21265; //yaw轴电机到枪口水平面的垂直距离
     // TODO：获取当前时间戳
     int timestamp_now = timestamp_start + 1000; // 假设当前时间戳=开始时间戳+1000ms
-    
+
     // 线性预测
     // 计算通信及解算时间戳延时+子弹飞行时间
-    
-    //计算四块装甲板的位置
-    // TODO 把预测放到前面
-    float timeDelay = (float)((timestamp_now - timestamp_start)/1000.0) + t;
-    st.tar_yaw += st.v_yaw * timeDelay;
 
+    float timeDelay = (float)((timestamp_now - timestamp_start)/1000.0) + t;
+    st.tar_yaw += st.v_yaw * t;
     //计算四块装甲板的位置
 	int use_1 = 1;
 	int i = 0;
+
 	for (i = 0; i<4; i++) {
 		float tmp_yaw = st.tar_yaw + i * PI/2.0;
 		float r = use_1 ? st.tar_r1 : st.tar_r2;
@@ -124,7 +119,6 @@ void GimbalControlTransform(float xw, float yw, float zw,
 		tar_position[i].yaw = st.tar_yaw + i * PI/2.0;
 		use_1 = !use_1;
 	}
-
 
     //两种决策方案：
     //1.计算枪管到目标装甲板yaw小的那个装甲板
@@ -169,28 +163,3 @@ void GimbalControlTransform(float xw, float yw, float zw,
 }
 
 // 从坐标轴正向看向原点，逆时针方向为正
-
-int main()
-{
-    float tar_x = 1.66568, tar_y = 0.0159, tar_z = -0.2898;    // target point  s = sqrt(x^2+y^2)
-    // float tar_x = 0.5, tar_y = 0.866, tar_z = 0.5;    // target point  s = sqrt(x^2+y^2)
-    // float tar_x = 0.5, tar_y = 0.866, tar_z = -0.1;    // target point  s = sqrt(x^2+y^2)
-    float aim_x = 0, aim_y = 0, aim_z = 0; // aim point
-    float tar_vx = 0, tar_vy = 0, tar_vz = 0; // target velocity
-    float pitch = 0;
-    float yaw = 0;
-    float tar_yaw = 0.09131;
-    int timestamp = 1;
-    // 机器人初始状态
-    GimbalControlInit(0, 0, 0, 0.1, 0.2 ,0.2, -0.32 ,18, 0.076);
-    // GimbalControlInit(0, 0, 18, 0.1);
-    // GimbalControlInit(0, 0, 18, 0.067);
-    
-    GimbalControlTransform(tar_x, tar_y, tar_z, tar_vx, tar_vy, tar_vz, timestamp, &pitch, &yaw, &aim_x, &aim_y, &aim_z);
-
-
-    printf("main pitch:%f° yaw:%f° ", pitch * 180 / PI, yaw * 180 / PI);
-    printf("\npitch:%frad yaw:%frad aim_x:%f aim_y:%f aim_z:%f", pitch, yaw, aim_x, aim_y, aim_z);
-
-    return 0;
-}
