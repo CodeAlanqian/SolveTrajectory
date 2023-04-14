@@ -143,20 +143,49 @@ $$
 ## 文件说明
 
 │  .gitignore
+
+
 │  ECterminal.c                     电控端文件
+
+
 │  readme.md
+
+
 │  SolveTrajectory.c              调试文件
+
+
 │  SolveTrajectory.h              头文件
+
+
 │
+
+
 ├─.vscode
+
+
 │      settings.json
+
+
 │      tasks.json
+
+
 │
+
+
 └─pic
+
+
         coordinate.jpg
+
+
         projectile.png
+
+
         projectile_model.png
+
+
         rotations.png
+
 
 ## 参考文献
 
