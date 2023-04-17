@@ -20,7 +20,7 @@ float t = 0.5f; // 飞行时间
 @param v:m/s
 @param k:弹道系数
 */
-void GimbalControlInit(float pitch, float yaw, float tar_yaw, float v_yaw, float r1, float r2, float z2, float v, float k)
+void GimbalControlInit(float pitch, float yaw, float tar_yaw, float v_yaw, float r1, float r2, float z2, uint8_t armor_type, float v, float k)
 {
     st.current_pitch = pitch;
     st.current_yaw = yaw;
@@ -31,6 +31,7 @@ void GimbalControlInit(float pitch, float yaw, float tar_yaw, float v_yaw, float
     st.tar_r1 = r1;
     st.tar_r2 = r2;
     st.z2 = z2;
+    st.armor_type = armor_type;
     printf("init %f,%f,%f,%f\n", st.current_pitch, st.current_yaw, st.current_v, st._k);
 }
 
@@ -112,50 +113,80 @@ void GimbalControlTransform(float xw, float yw, float zw,
     float timeDelay = (float)((timestamp_now - timestamp_start)/1000.0) + t;
     st.tar_yaw += st.v_yaw * timeDelay;
 
+    //TODO 加入装甲板类型判断，用于区别平衡步兵和步兵
     //计算四块装甲板的位置
 	int use_1 = 1;
 	int i = 0;
-	for (i = 0; i<4; i++) {
-		float tmp_yaw = st.tar_yaw + i * PI/2.0;
-		float r = use_1 ? st.tar_r1 : st.tar_r2;
-		tar_position[i].x = xw - r*cos(tmp_yaw);
-		tar_position[i].y = yw - r*sin(tmp_yaw);
-		tar_position[i].z = use_1 ? zw : st.z2;
-		tar_position[i].yaw = st.tar_yaw + i * PI/2.0;
-		use_1 = !use_1;
-	}
+    int index = 0; // 选择的装甲板
+    //armor_type = 1 为平衡步兵
+    if (st.armor_type == 1) {
+        for (i = 0; i<2; i++) {
+            float tmp_yaw = st.tar_yaw + i * PI;
+            float r = st.tar_r1;
+            tar_position[i].x = xw - r*cos(tmp_yaw);
+            tar_position[i].y = yw - r*sin(tmp_yaw);
+            tar_position[i].z = zw;
+            tar_position[i].yaw = st.tar_yaw + i * PI;
+        }
+
+        float yaw_diff_min = fabsf(*yaw - tar_position[0].yaw);
+
+        //因为是平衡步兵 只需判断两块装甲板即可
+        float temp_yaw_diff = fabsf(*yaw - tar_position[1].yaw);
+        if (temp_yaw_diff < yaw_diff_min)
+        {
+            yaw_diff_min = temp_yaw_diff;
+            index = 1;
+        }
 
 
-    //两种决策方案：
-    //1.计算枪管到目标装甲板yaw小的那个装甲板
-    //2.计算距离最近的装甲板
+    } else {
 
-	//计算距离最近的装甲板
-//	float dis_diff_min = sqrt(tar_position[0].x * tar_position[0].x + tar_position[0].y * tar_position[0].y);
-//	int index = 0;
-//	for (i = 1; i<4; i++)
-//	{
-//		float temp_dis_diff = sqrt(tar_position[i].x * tar_position[0].x + tar_position[i].y * tar_position[0].y);
-//		if (temp_dis_diff < dis_diff_min)
-//		{
-//			dis_diff_min = temp_dis_diff;
-//			index = i;
-//		}
-//	}
-//
-	//计算枪管到目标装甲板yaw小的那个装甲板
-		float yaw_diff_min = fabsf(*yaw - tar_position[0].yaw);
-		int index = 0;
-		for (i = 1; i<4; i++)
-		{
-			float temp_yaw_diff = fabsf(*yaw - tar_position[i].yaw);
-			if (temp_yaw_diff < yaw_diff_min)
-			{
-				yaw_diff_min = temp_yaw_diff;
-				index = i;
-			}
-		}
+    for (i = 0; i<4; i++) {
+            float tmp_yaw = st.tar_yaw + i * PI/2.0;
+            float r = use_1 ? st.tar_r1 : st.tar_r2;
+            tar_position[i].x = xw - r*cos(tmp_yaw);
+            tar_position[i].y = yw - r*sin(tmp_yaw);
+            tar_position[i].z = use_1 ? zw : st.z2;
+            tar_position[i].yaw = st.tar_yaw + i * PI/2.0;
+            use_1 = !use_1;
+        }
 
+
+        //两种决策方案：
+        //1.计算枪管到目标装甲板yaw小的那个装甲板
+        //2.计算距离最近的装甲板
+
+        //计算距离最近的装甲板
+    //	float dis_diff_min = sqrt(tar_position[0].x * tar_position[0].x + tar_position[0].y * tar_position[0].y);
+    //	int index = 0;
+    //	for (i = 1; i<4; i++)
+    //	{
+    //		float temp_dis_diff = sqrt(tar_position[i].x * tar_position[0].x + tar_position[i].y * tar_position[0].y);
+    //		if (temp_dis_diff < dis_diff_min)
+    //		{
+    //			dis_diff_min = temp_dis_diff;
+    //			index = i;
+    //		}
+    //	}
+    //
+    //计算枪管到目标装甲板yaw小的那个装甲板
+        float yaw_diff_min = fabsf(*yaw - tar_position[0].yaw);
+        for (i = 1; i<4; i++)
+        {
+            float temp_yaw_diff = fabsf(*yaw - tar_position[i].yaw);
+            if (temp_yaw_diff < yaw_diff_min)
+            {
+                yaw_diff_min = temp_yaw_diff;
+                index = i;
+            }
+        }
+
+
+
+    }
+
+	
 
     *aim_z = tar_position[index].z + vzw * timeDelay;
     *pitch = -GimbalControlGetPitch(sqrt(tar_position[index].x * tar_position[index].x + tar_position[index].y * tar_position[index].y) + x_static,
@@ -181,8 +212,9 @@ int main()
     float yaw = 0;
     float tar_yaw = 0.09131;
     int timestamp = 1;
+    uint8_t armor_type = 0;
     // 机器人初始状态
-    GimbalControlInit(0, 0, 0, 0.1, 0.2 ,0.2, -0.32 ,18, 0.076);
+    GimbalControlInit(0, 0, 0, 0.1, 0.2 ,0.2, -0.32, armor_type, 18, 0.076);
     // GimbalControlInit(0, 0, 18, 0.1);
     // GimbalControlInit(0, 0, 18, 0.067);
     

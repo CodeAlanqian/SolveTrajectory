@@ -109,46 +109,74 @@ void GimbalControlTransform(float xw, float yw, float zw,
     //计算四块装甲板的位置
 	int use_1 = 1;
 	int i = 0;
+    int index = 0; // 选择的装甲板
+    //armor_type = 1 为平衡步兵
+    if (st.armor_type == 1) {
+        for (i = 0; i<2; i++) {
+            float tmp_yaw = st.tar_yaw + i * PI;
+            float r = st.tar_r1;
+            tar_position[i].x = xw - r*cos(tmp_yaw);
+            tar_position[i].y = yw - r*sin(tmp_yaw);
+            tar_position[i].z = zw;
+            tar_position[i].yaw = st.tar_yaw + i * PI;
+        }
 
-	for (i = 0; i<4; i++) {
-		float tmp_yaw = st.tar_yaw + i * PI/2.0;
-		float r = use_1 ? st.tar_r1 : st.tar_r2;
-		tar_position[i].x = xw - r*cos(tmp_yaw);
-		tar_position[i].y = yw - r*sin(tmp_yaw);
-		tar_position[i].z = use_1 ? zw : st.z2;
-		tar_position[i].yaw = st.tar_yaw + i * PI/2.0;
-		use_1 = !use_1;
-	}
+        float yaw_diff_min = fabsf(*yaw - tar_position[0].yaw);
 
-    //两种决策方案：
-    //1.计算枪管到目标装甲板yaw小的那个装甲板
-    //2.计算距离最近的装甲板
+        //因为是平衡步兵 只需判断两块装甲板即可
+        float temp_yaw_diff = fabsf(*yaw - tar_position[1].yaw);
+        if (temp_yaw_diff < yaw_diff_min)
+        {
+            yaw_diff_min = temp_yaw_diff;
+            index = 1;
+        }
 
-	//计算距离最近的装甲板
-//	float dis_diff_min = sqrt(tar_position[0].x * tar_position[0].x + tar_position[0].y * tar_position[0].y);
-//	int index = 0;
-//	for (i = 1; i<4; i++)
-//	{
-//		float temp_dis_diff = sqrt(tar_position[i].x * tar_position[0].x + tar_position[i].y * tar_position[0].y);
-//		if (temp_dis_diff < dis_diff_min)
-//		{
-//			dis_diff_min = temp_dis_diff;
-//			index = i;
-//		}
-//	}
-//
-	//计算枪管到目标装甲板yaw小的那个装甲板
-		float yaw_diff_min = fabsf(*yaw - tar_position[0].yaw);
-		int index = 0;
-		for (i = 1; i<4; i++)
-		{
-			float temp_yaw_diff = fabsf(*yaw - tar_position[i].yaw);
-			if (temp_yaw_diff < yaw_diff_min)
-			{
-				yaw_diff_min = temp_yaw_diff;
-				index = i;
-			}
-		}
+
+    } else {
+
+    for (i = 0; i<4; i++) {
+            float tmp_yaw = st.tar_yaw + i * PI/2.0;
+            float r = use_1 ? st.tar_r1 : st.tar_r2;
+            tar_position[i].x = xw - r*cos(tmp_yaw);
+            tar_position[i].y = yw - r*sin(tmp_yaw);
+            tar_position[i].z = use_1 ? zw : st.z2;
+            tar_position[i].yaw = st.tar_yaw + i * PI/2.0;
+            use_1 = !use_1;
+        }
+
+
+        //两种决策方案：
+        //1.计算枪管到目标装甲板yaw小的那个装甲板
+        //2.计算距离最近的装甲板
+
+        //计算距离最近的装甲板
+    //	float dis_diff_min = sqrt(tar_position[0].x * tar_position[0].x + tar_position[0].y * tar_position[0].y);
+    //	int index = 0;
+    //	for (i = 1; i<4; i++)
+    //	{
+    //		float temp_dis_diff = sqrt(tar_position[i].x * tar_position[0].x + tar_position[i].y * tar_position[0].y);
+    //		if (temp_dis_diff < dis_diff_min)
+    //		{
+    //			dis_diff_min = temp_dis_diff;
+    //			index = i;
+    //		}
+    //	}
+    //
+    //计算枪管到目标装甲板yaw小的那个装甲板
+        float yaw_diff_min = fabsf(*yaw - tar_position[0].yaw);
+        for (i = 1; i<4; i++)
+        {
+            float temp_yaw_diff = fabsf(*yaw - tar_position[i].yaw);
+            if (temp_yaw_diff < yaw_diff_min)
+            {
+                yaw_diff_min = temp_yaw_diff;
+                index = i;
+            }
+        }
+
+
+
+    }
 
 
     *aim_z = tar_position[index].z + vzw * timeDelay;
