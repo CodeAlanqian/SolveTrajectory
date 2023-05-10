@@ -34,7 +34,7 @@ extern float GimbalControlGetPitch(float x, float y, float v);
 
 extern void GimbalControlTransform(float xw, float yw, float zw,
                                 float vxw, float vyw, float vzw,
-                                int timestamp_start, float *pitch, float *yaw,
+                                int bias_time, float *pitch, float *yaw,
                                 float *aim_x, float *aim_y, float *aim_z);
 
 #endif /*__SOLVETRAJECTORY_H__*/

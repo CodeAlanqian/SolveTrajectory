@@ -1,4 +1,4 @@
-说明：模型适配陈君【[chenjunnn](https://github.com/chenjunnn)】的整车观测器自瞄的电控部分
+说明：模型适配陈君【[chenjunnn](https://github.com/chenjunnn)】的整车状态最优估计器自瞄的电控部分
 
 # 弹道解算
 
@@ -44,7 +44,7 @@ $$
 
 C为球体在空气中的摩擦系数 一般取值0.47
 
-ρ为空气密度，在温度为0摄氏度、标准大气压下取值为1.293kg/m^3, 25摄氏度、标准大气压取值为1.169kg/m^3
+ρ为空气密度，在温度为0摄氏度、标准大气压下取值为1.293kg/m^3,  25摄氏度、标准大气压取值为1.169kg/m^3
 
 S为接触面积
 
@@ -52,8 +52,7 @@ S为接触面积
 
 质量 ：3.2g±0.1g
 尺寸 ：16.8mm±0.2mm
-
-算得小弹丸$k_1=0.076$
+在标压，25摄氏度下算得小弹丸  $ k_1=0.076  $  实际值偏大，大概在0.09-0.1
 
 $$
 v_s = v_0cosθ
@@ -144,48 +143,35 @@ $$
 
 │  .gitignore
 
-
 │  ECterminal.c                     电控端文件
-
 
 │  readme.md
 
-
 │  SolveTrajectory.c              调试文件
-
 
 │  SolveTrajectory.h              头文件
 
-
 │
-
 
 ├─.vscode
 
-
 │      settings.json
-
 
 │      tasks.json
 
-
 │
-
 
 └─pic
 
+|       coordinate.jpg
 
-        coordinate.jpg
+|       projectile.png
 
+|       projectile_model.png
 
-        projectile.png
+|       rotations.png
 
-
-        projectile_model.png
-
-
-        rotations.png
-
+|
 
 ## 参考文献
 

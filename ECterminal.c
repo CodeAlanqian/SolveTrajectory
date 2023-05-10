@@ -20,7 +20,7 @@ float t = 0.5f; // 飞行时间
 @param v:m/s
 @param k:弹道系数
 */
-void GimbalControlInit(float pitch, float yaw, float tar_yaw , float v_yaw, float r1, float r2, float z2, float v, float k)
+void GimbalControlInit(float pitch, float yaw, float tar_yaw, float v_yaw, float r1, float r2, float z2, uint8_t armor_type, float v, float k)
 {
     st.current_pitch = pitch;
     st.current_yaw = yaw;
@@ -31,6 +31,7 @@ void GimbalControlInit(float pitch, float yaw, float tar_yaw , float v_yaw, floa
     st.tar_r1 = r1;
     st.tar_r2 = r2;
     st.z2 = z2;
+    st.armor_type = armor_type;
 }
 
 /*
@@ -84,7 +85,7 @@ float GimbalControlGetPitch(float x, float y, float v)
 @param vxw:ROS坐标系下的vx
 @param vyw:ROS坐标系下的vy
 @param vzw:ROS坐标系下的vz
-@param timestamp_start:开始时间戳
+@param bias_time:固定时间延迟偏置 单位ms
 @param pitch:rad  传出pitch
 @param yaw:rad    传出yaw
 @param aim_x:传出aim_x  打击目标的x
@@ -93,23 +94,20 @@ float GimbalControlGetPitch(float x, float y, float v)
 */
 void GimbalControlTransform(float xw, float yw, float zw,
                             float vxw, float vyw, float vzw,
-                            int timestamp_start, float *pitch, float *yaw,
+                            int bias_time, float *pitch, float *yaw,
                             float *aim_x, float *aim_y, float *aim_z)
 {
-    float x_static = 0.19133; //相机前推的距离
+    float s_static = 0.19133; //枪口前推的距离
     float z_static = 0.21265; //yaw轴电机到枪口水平面的垂直距离
-    // TODO：获取当前时间戳
-    int timestamp_now = timestamp_start + 1000; // 假设当前时间戳=开始时间戳+1000ms
 
     // 线性预测
-    // 计算通信及解算时间戳延时+子弹飞行时间
+    float timeDelay = bias_time/1000.0 + t;
+    st.tar_yaw += st.v_yaw * timeDelay;
 
-    float timeDelay = (float)((timestamp_now - timestamp_start)/1000.0) + t;
-    st.tar_yaw += st.v_yaw * t;
     //计算四块装甲板的位置
 	int use_1 = 1;
 	int i = 0;
-    int index = 0; // 选择的装甲板
+    int idx = 0; // 选择的装甲板
     //armor_type = 1 为平衡步兵
     if (st.armor_type == 1) {
         for (i = 0; i<2; i++) {
@@ -128,13 +126,13 @@ void GimbalControlTransform(float xw, float yw, float zw,
         if (temp_yaw_diff < yaw_diff_min)
         {
             yaw_diff_min = temp_yaw_diff;
-            index = 1;
+            idx = 1;
         }
 
 
     } else {
 
-    for (i = 0; i<4; i++) {
+        for (i = 0; i<4; i++) {
             float tmp_yaw = st.tar_yaw + i * PI/2.0;
             float r = use_1 ? st.tar_r1 : st.tar_r2;
             tar_position[i].x = xw - r*cos(tmp_yaw);
@@ -144,48 +142,45 @@ void GimbalControlTransform(float xw, float yw, float zw,
             use_1 = !use_1;
         }
 
+            //2种常见决策方案：
+            //1.计算枪管到目标装甲板yaw最小的那个装甲板
+            //2.计算距离最近的装甲板
 
-        //两种决策方案：
-        //1.计算枪管到目标装甲板yaw小的那个装甲板
-        //2.计算距离最近的装甲板
+            //计算距离最近的装甲板
+        //	float dis_diff_min = sqrt(tar_position[0].x * tar_position[0].x + tar_position[0].y * tar_position[0].y);
+        //	int idx = 0;
+        //	for (i = 1; i<4; i++)
+        //	{
+        //		float temp_dis_diff = sqrt(tar_position[i].x * tar_position[0].x + tar_position[i].y * tar_position[0].y);
+        //		if (temp_dis_diff < dis_diff_min)
+        //		{
+        //			dis_diff_min = temp_dis_diff;
+        //			idx = i;
+        //		}
+        //	}
+        //
 
-        //计算距离最近的装甲板
-    //	float dis_diff_min = sqrt(tar_position[0].x * tar_position[0].x + tar_position[0].y * tar_position[0].y);
-    //	int index = 0;
-    //	for (i = 1; i<4; i++)
-    //	{
-    //		float temp_dis_diff = sqrt(tar_position[i].x * tar_position[0].x + tar_position[i].y * tar_position[0].y);
-    //		if (temp_dis_diff < dis_diff_min)
-    //		{
-    //			dis_diff_min = temp_dis_diff;
-    //			index = i;
-    //		}
-    //	}
-    //
-    //计算枪管到目标装甲板yaw小的那个装甲板
+            //计算枪管到目标装甲板yaw最小的那个装甲板
         float yaw_diff_min = fabsf(*yaw - tar_position[0].yaw);
-        for (i = 1; i<4; i++)
-        {
+        for (i = 1; i<4; i++) {
             float temp_yaw_diff = fabsf(*yaw - tar_position[i].yaw);
             if (temp_yaw_diff < yaw_diff_min)
             {
                 yaw_diff_min = temp_yaw_diff;
-                index = i;
+                idx = i;
             }
         }
 
-
-
     }
 
+	
 
-    *aim_z = tar_position[index].z + vzw * timeDelay;
-    *pitch = -GimbalControlGetPitch(sqrt(tar_position[index].x * tar_position[index].x + tar_position[index].y * tar_position[index].y) + x_static,
-            tar_position[index].z - z_static, st.current_v);
+    *aim_z = tar_position[idx].z + vzw * timeDelay;
+    *aim_x = tar_position[idx].x + vxw * timeDelay;
+    *aim_y = tar_position[idx].y + vyw * timeDelay;
 
-    *aim_x = tar_position[index].x + vxw * timeDelay;
-    *aim_y = tar_position[index].y + vyw * timeDelay;
-
+    *pitch = -GimbalControlGetPitch(sqrt((*aim_x) * (*aim_x) + (*aim_y) * (*aim_y)) + s_static,
+            tar_position[idx].z - z_static, st.current_v);
     *yaw = (float)(atan2(*aim_y, *aim_x));
 
 }
