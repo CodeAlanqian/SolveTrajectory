@@ -52,7 +52,12 @@ S为接触面积
 
 质量 ：3.2g±0.1g
 尺寸 ：16.8mm±0.2mm
-在标压，25摄氏度下算得小弹丸  $ k_1=0.076  $  实际值偏大，大概在0.09-0.1
+
+$$
+在标压，25摄氏度下算得小弹丸   k_1=0.076
+$$
+
+实际值偏大，大概在0.09-0.1
 
 $$
 v_s = v_0cosθ
@@ -171,14 +176,11 @@ $$
 
 |       rotations.png
 
-|
-
 ## 参考文献
 
 [1]RoboMaster 2019 AI Robot Platform
+[RoboMaster/RoboRTS-Tutorial: RoboRTS Tutorial (github.com)](https://github.com/RoboMaster/RoboRTS-Tutorial)
 
 [2][chenjunnn/rm_auto_aim: RoboMaster 装甲板自动瞄准算法模块 (github.com)](https://github.com/chenjunnn/rm_auto_aim)
 
 [3][chenjunnn/rm_serial_driver: RoboMaster 视觉系统与电控系统的串口通讯模块 (github.com)](https://github.com/chenjunnn/rm_serial_driver)
-
-[RoboMaster/RoboRTS-Tutorial: RoboRTS Tutorial (github.com)](https://github.com/RoboMaster/RoboRTS-Tutorial)
