@@ -1,79 +1,85 @@
 /*
+@brief: 弹道解算 适配陈君的rm_vision
 @author: CodeAlan  华南师大Vanguard战队
 */
-// 弹道解算
-// 只考虑水平方向的空气阻力
+// 近点只考虑水平方向的空气阻力
+
+
+
+//TODO 完整弹道模型
+//TODO 适配英雄机器人弹道解算
+
 
 #include <math.h>
 #include <stdio.h>
 
 #include "SolveTrajectory.h"
 
-struct SolveTrajectory st;
-struct tar_pos tar_position[4];
+struct SolveTrajectoryParams st;
+struct tar_pos tar_position[4]; //最多只有四块装甲板
 float t = 0.5f; // 飞行时间
 
-/*
-@brief 初始化
-@param pitch:rad
-@param yaw:rad
-@param v:m/s
-@param k:弹道系数
-*/
-void GimbalControlInit(float pitch, float yaw, float tar_yaw, float v_yaw, float r1, float r2, float z2, uint8_t armor_type, float v, float k)
-{
-    st.current_pitch = pitch;
-    st.current_yaw = yaw;
-    st.current_v = v;
-    st._k = k;
-    st.tar_yaw = tar_yaw;
-    st.v_yaw = v_yaw;
-    st.tar_r1 = r1;
-    st.tar_r2 = r2;
-    st.z2 = z2;
-    st.armor_type = armor_type;
-    printf("init %f,%f,%f,%f\n", st.current_pitch, st.current_yaw, st.current_v, st._k);
-}
+
 
 /*
-@brief 弹道模型
-@param x:m 距离
+@brief 单方向空气阻力弹道模型
+@param s:m 距离
 @param v:m/s 速度
 @param angle:rad 角度
-@return y:m
+@return z:m
 */
-float GimbalControlBulletModel(float x, float v, float angle)
+float monoDirectionalAirResistanceModel(float s, float v, float angle)
 {
-    float y;
-    t = (float)((exp(st._k * x) - 1) / (st._k * v * cos(angle)));
-    y = (float)(v * sin(angle) * t - GRAVITY * t * t / 2);
-    printf("model %f %f\n", t, y);
-    return y;
+    float z;
+    //t为给定v与angle时的飞行时间
+    t = (float)((exp(st.k * s) - 1) / (st.k * v * cos(angle)));
+    //z为给定v与angle时的高度
+    z = (float)(v * sin(angle) * t - GRAVITY * t * t / 2);
+    printf("model %f %f\n", t, z);
+    return z;
 }
+
+
+/*
+@brief 完整弹道模型
+@param s:m 距离
+@param v:m/s 速度
+@param angle:rad 角度
+@return z:m
+*/
+//TODO 完整弹道模型
+float completeAirResistanceModel(float s, float v, float angle)
+{
+    continue;
+
+
+}
+
+
 
 /*
 @brief pitch轴解算
-@param x:m 距离
-@param y:m 高度
+@param s:m 距离
+@param z:m 高度
 @param v:m/s
 @return angle_pitch:rad
 */
-float GimbalControlGetPitch(float x, float y, float v)
+float pitchTrajectoryCompensation(float s, float z, float v)
 {
-    float y_temp, y_actual, dy;
+    float z_temp, z_actual, dz;
     float angle_pitch;
-    y_temp = y;
-    // iteration
     int i = 0;
+    z_temp = z;
+    // iteration
     for (i = 0; i < 20; i++)
     {
-        angle_pitch = (float)atan2(y_temp, x); // rad
-        y_actual = GimbalControlBulletModel(x, v, angle_pitch);
-        dy = 0.3*(y - y_actual);
-        y_temp = y_temp + dy;
-        printf("iteration num %d: angle_pitch %f, temp target y:%f, err of y:%f, x:%f\n",
-            i + 1, angle_pitch * 180 / PI, y_temp, dy,x);
-        if (fabsf(dy) < 0.00001)
+        angle_pitch = atan2(z_temp, s); // rad
+        z_actual = monoDirectionalAirResistanceModel(s, v, angle_pitch);
+        dz = 0.3*(z - z_actual);
+        z_temp = z_temp + dz;
+        printf("iteration num %d: angle_pitch %f, temp target z:%f, err of z:%f, s:%f\n",
+            i + 1, angle_pitch * 180 / PI, z_temp, dz,s);
+        if (fabsf(dz) < 0.00001)
         {
             break;
         }
@@ -82,30 +88,18 @@ float GimbalControlGetPitch(float x, float y, float v)
 }
 
 /*
-@brief 世界坐标系转换到云台坐标系
-@param xw:ROS坐标系下的x
-@param yw:ROS坐标系下的y
-@param zw:ROS坐标系下的z
-@param vxw:ROS坐标系下的vx
-@param vyw:ROS坐标系下的vy
-@param vzw:ROS坐标系下的vz
-@param bias_time:固定时间延迟偏置 单位ms
+@brief 根据最优决策得出被击打装甲板 自动解算弹道
 @param pitch:rad  传出pitch
 @param yaw:rad    传出yaw
 @param aim_x:传出aim_x  打击目标的x
 @param aim_y:传出aim_y  打击目标的y
 @param aim_z:传出aim_z  打击目标的z
 */
-void GimbalControlTransform(float xw, float yw, float zw,
-                            float vxw, float vyw, float vzw,
-                            int bias_time, float *pitch, float *yaw,
-                            float *aim_x, float *aim_y, float *aim_z)
+void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, float *aim_z)
 {
-    float s_static = 0.19133; //枪口前推的距离
-    float z_static = 0.21265; //yaw轴电机到枪口水平面的垂直距离
 
     // 线性预测
-    float timeDelay = bias_time/1000.0 + t;
+    float timeDelay = st.bias_time/1000.0 + t;
     st.tar_yaw += st.v_yaw * timeDelay;
 
     //计算四块装甲板的位置
@@ -113,13 +107,13 @@ void GimbalControlTransform(float xw, float yw, float zw,
 	int i = 0;
     int idx = 0; // 选择的装甲板
     //armor_type = 1 为平衡步兵
-    if (st.armor_type == 1) {
+    if (st.armor_num == ARMOR_NUM_BALANCE) {
         for (i = 0; i<2; i++) {
             float tmp_yaw = st.tar_yaw + i * PI;
-            float r = st.tar_r1;
-            tar_position[i].x = xw - r*cos(tmp_yaw);
-            tar_position[i].y = yw - r*sin(tmp_yaw);
-            tar_position[i].z = zw;
+            float r = st.r1;
+            tar_position[i].x = st.xw - r*cos(tmp_yaw);
+            tar_position[i].y = st.yw - r*sin(tmp_yaw);
+            tar_position[i].z = st.zw;
             tar_position[i].yaw = st.tar_yaw + i * PI;
         }
 
@@ -138,10 +132,10 @@ void GimbalControlTransform(float xw, float yw, float zw,
 
         for (i = 0; i<4; i++) {
             float tmp_yaw = st.tar_yaw + i * PI/2.0;
-            float r = use_1 ? st.tar_r1 : st.tar_r2;
-            tar_position[i].x = xw - r*cos(tmp_yaw);
-            tar_position[i].y = yw - r*sin(tmp_yaw);
-            tar_position[i].z = use_1 ? zw : st.z2;
+            float r = use_1 ? st.r1 : st.r2;
+            tar_position[i].x = st.xw - r*cos(tmp_yaw);
+            tar_position[i].y = st.yw - r*sin(tmp_yaw);
+            tar_position[i].z = use_1 ? st.zw : st.zw + st.dz;
             tar_position[i].yaw = st.tar_yaw + i * PI/2.0;
             use_1 = !use_1;
         }
@@ -179,12 +173,12 @@ void GimbalControlTransform(float xw, float yw, float zw,
 
 	
 
-    *aim_z = tar_position[idx].z + vzw * timeDelay;
-    *aim_x = tar_position[idx].x + vxw * timeDelay;
-    *aim_y = tar_position[idx].y + vyw * timeDelay;
-
-    *pitch = -GimbalControlGetPitch(sqrt((*aim_x) * (*aim_x) + (*aim_y) * (*aim_y)) + s_static,
-            tar_position[idx].z - z_static, st.current_v);
+    *aim_z = tar_position[idx].z + st.vzw * timeDelay;
+    *aim_x = tar_position[idx].x + st.vxw * timeDelay;
+    *aim_y = tar_position[idx].y + st.vyw * timeDelay;
+    //这里符号给错了
+    *pitch = -pitchTrajectoryCompensation(sqrt((*aim_x) * (*aim_x) + (*aim_y) * (*aim_y)) - st.s_bias,
+            *aim_z + st.z_bias, st.current_v);
     *yaw = (float)(atan2(*aim_y, *aim_x));
 
 }
@@ -193,21 +187,35 @@ void GimbalControlTransform(float xw, float yw, float zw,
 
 int main()
 {
-    float tar_x = 1.66568, tar_y = 0.0159, tar_z = -0.2898;    // target point  s = sqrt(x^2+y^2)
-    float aim_x = 0, aim_y = 0, aim_z = 0; // aim point
-    float tar_vx = 0, tar_vy = 0, tar_vz = 0; // target velocity
-    float pitch = 0;
-    float yaw = 0;
-    float tar_yaw = 0.09131;
-    int time_bias = 100;
-    uint8_t armor_type = 0;
+    float aim_x = 0, aim_y = 0, aim_z = 0; // aim point 落点，传回上位机用于可视化
+    float pitch = 0; //输出控制量 pitch绝对角度 弧度
+    float yaw = 0;   //输出控制量 yaw绝对角度 弧度
 
-    // 机器人初始状态
-    GimbalControlInit(0, 0, 0, 0.1, 0.2 ,0.2, -0.32, armor_type, 18, 0.076);
+    //定义参数
+    st.k = 0.092;
+    st.bullet_type =  BULLET_17;
+    st.current_v = 18;
+    st.current_pitch = 0;
+    st.current_yaw = 0;
+    st.xw = 1.66568;
+    st.yw = 0.0159;
+    st.zw = -0.2898;
+    st.vxw = 0;
+    st.vyw = 0;
+    st.vzw = 0;
+    st.v_yaw = 0;
+    st.tar_yaw = 0.09131;
+    st.r1 = 0.5;
+    st.r2 = 0.5;
+    st.dz = 0.1;
+    st.bias_time = 100;
+    st.s_bias = 0.19133;
+    st.z_bias = 0.21265;
+    st.armor_id = ARMOR_INFANTRY3;
+    st.armor_num = ARMOR_NUM_NORMAL;
 
-    GimbalControlTransform(tar_x, tar_y, tar_z, tar_vx, tar_vy, tar_vz, 
-        time_bias, &pitch, &yaw, 
-        &aim_x, &aim_y, &aim_z);
+
+    autoSolveTrajectory(&pitch, &yaw, &aim_x, &aim_y, &aim_z);
 
 
     printf("main pitch:%f° yaw:%f° ", pitch * 180 / PI, yaw * 180 / PI);
