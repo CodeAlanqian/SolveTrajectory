@@ -1,5 +1,7 @@
 说明：模型适配陈君【[chenjunnn](https://github.com/chenjunnn)】的整车状态最优估计器自瞄的电控部分
 
+如果感觉对你有帮助的话，不要吝啬你的小星星![1684861635255](./md_pic/1684861635255.png)哦
+
 # 弹道解算
 
 给定目标位置坐标(x,y,z)，求解**出射角θ（炮台仰角）**
@@ -8,7 +10,7 @@
 
 只考虑重力作用，弹道为抛物线
 
-![projectile](./pic/projectile.png)
+![projectile](./md_pic/projectile.png)
 
 $$
 横轴为s = \sqrt{x^2+y^2},纵轴为z
@@ -16,7 +18,7 @@ $$
 
 ## 单方向空气阻力模型
 
-![projectile_model](./pic/projectile_model.png)
+![projectile_model](./md_pic/projectile_model.png)
 
 当我们直接瞄准目标点（枪管朝向目标点）时，会有一个下落高度。
 
@@ -54,10 +56,10 @@ S为接触面积
 尺寸 ：16.8mm±0.2mm
 
 $$
-在标压，25摄氏度下算得小弹丸   k_1=0.076
+在标压，25摄氏度下算得小弹丸   k_1=0.038
 $$
 
-实际值偏大，大概在0.09-0.1
+实际值会偏大
 
 $$
 v_s = v_0cosθ
@@ -107,10 +109,10 @@ $$
 
 * 设置目标点targetPoint(x, y, z)
 
-  * 右手坐标系![](./pic/coordinate.jpg)
+  * 右手坐标系![](./md_pic/coordinate.jpg)
   * pitch轴 y轴为转轴 从y轴正向看向原点，逆时针方向为pitch轴正方向
   * yaw轴 z轴为转轴 从z轴正向看向原点，逆时针方向为pitch轴正方向
-  * ![](./pic/rotations.png)
+  * ![](./md_pic/rotations.png)
 * 设置临时目标点tempPoint = targetPoint
 * 循环迭代n次(10-20次)：
 
@@ -181,6 +183,9 @@ $$
 [1]RoboMaster 2019 AI Robot Platform
 [RoboMaster/RoboRTS-Tutorial: RoboRTS Tutorial (github.com)](https://github.com/RoboMaster/RoboRTS-Tutorial)
 
-[2][chenjunnn/rm_auto_aim: RoboMaster 装甲板自动瞄准算法模块 (github.com)](https://github.com/chenjunnn/rm_auto_aim)
+[2][RoboMaster OSS](https://robomaster-oss.github.io/rmoss_tutorials/#/rmoss_core/rmoss_projectile_motion/projectile_motion_iteration)
 
-[3][chenjunnn/rm_serial_driver: RoboMaster 视觉系统与电控系统的串口通讯模块 (github.com)](https://github.com/chenjunnn/rm_serial_driver)
+[3][chenjunnn/rm_auto_aim: RoboMaster 装甲板自动瞄准算法模块 (github.com)](https://github.com/chenjunnn/rm_auto_aim)
+
+[4][chenjunnn/rm_serial_driver: RoboMaster 视觉系统与电控系统的串口通讯模块 (github.com)](https://github.com/chenjunnn/rm_serial_driver)
+
