@@ -103,6 +103,10 @@ void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, f
     st.tar_yaw += st.v_yaw * timeDelay;
 
     //计算四块装甲板的位置
+    //装甲板id顺序，以四块装甲板为例，逆时针编号
+    //      2
+    //   3     1
+    //      0
 	int use_1 = 1;
 	int i = 0;
     int idx = 0; // 选择的装甲板
