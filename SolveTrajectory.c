@@ -106,7 +106,7 @@ void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, f
 	int use_1 = 1;
 	int i = 0;
     int idx = 0; // 选择的装甲板
-    //armor_type = 1 为平衡步兵
+    //armor_num = ARMOR_NUM_BALANCE 为平衡步兵
     if (st.armor_num == ARMOR_NUM_BALANCE) {
         for (i = 0; i<2; i++) {
             float tmp_yaw = st.tar_yaw + i * PI;
@@ -114,7 +114,7 @@ void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, f
             tar_position[i].x = st.xw - r*cos(tmp_yaw);
             tar_position[i].y = st.yw - r*sin(tmp_yaw);
             tar_position[i].z = st.zw;
-            tar_position[i].yaw = st.tar_yaw + i * PI;
+            tar_position[i].yaw = tmp_yaw;
         }
 
         float yaw_diff_min = fabsf(*yaw - tar_position[0].yaw);
@@ -128,6 +128,19 @@ void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, f
         }
 
 
+    } else if (st.armor_num == ARMOR_NUM_OUTPOST) {  //前哨站
+        for (i = 0; i<3; i++) {
+            float tmp_yaw = st.tar_yaw + i * 2.0 * PI/3.0;  // 2/3PI
+            float r =  (st.r1 + st.r2)/2;   //理论上r1=r2 这里取个平均值
+            tar_position[i].x = st.xw - r*cos(tmp_yaw);
+            tar_position[i].y = st.yw - r*sin(tmp_yaw);
+            tar_position[i].z = st.zw
+            tar_position[i].yaw = tmp_yaw;
+        }
+
+        //TODO 选择最优装甲板 选板逻辑你们自己写，这个一般给英雄用
+
+
     } else {
 
         for (i = 0; i<4; i++) {
@@ -136,7 +149,7 @@ void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, f
             tar_position[i].x = st.xw - r*cos(tmp_yaw);
             tar_position[i].y = st.yw - r*sin(tmp_yaw);
             tar_position[i].z = use_1 ? st.zw : st.zw + st.dz;
-            tar_position[i].yaw = st.tar_yaw + i * PI/2.0;
+            tar_position[i].yaw = tmp_yaw;
             use_1 = !use_1;
         }
 

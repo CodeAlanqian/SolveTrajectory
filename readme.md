@@ -6,19 +6,30 @@
 
 给定目标位置坐标(x,y,z)，求解**出射角θ（炮台仰角）**
 
+---
+本文基本约定：
+* 右手坐标系
+* <img src="./md_pic/coordinate.jpg" width="40%" height="40%" alt="右手系" align=center />
+* pitch轴 y轴为转轴 从y轴正向看向原点，逆时针方向为pitch轴正方向
+* yaw轴 z轴为转轴 从z轴正向看向原点，逆时针方向为pitch轴正方向
+* <img src="./md_pic/rotations.png" width="50%" height="50%" alt="旋转轴" align=center />
+* 某弹道竖直方向切面 $$s = \sqrt{x^2+y^2}$$ ， z为纵轴
+
+---
 ## 理想弹道模型
 
 只考虑重力作用，弹道为抛物线
 
-![projectile](./md_pic/projectile.png)
+<img src="./md_pic/projectile.png" width="80%" height="80%" alt="projectile" align=center />
 
 $$
 横轴为s = \sqrt{x^2+y^2},纵轴为z
 $$
 
+---
 ## 单方向空气阻力模型
 
-![projectile_model](./md_pic/projectile_model.png)
+<img src="./md_pic/projectile_model.png" width="80%" height="80%" alt="projectile_model" align=center />
 
 当我们直接瞄准目标点（枪管朝向目标点）时，会有一个下落高度。
 
@@ -101,18 +112,13 @@ $$
 积分得 s = \frac{1}{k_1}ln(k_1v_{x0}t+1)······式(1)
 $$
 
-## 迭代重力-空气阻力补偿
-
 ---
+## 迭代重力-空气阻力补偿
 
 迭代过程：
 
 * 设置目标点targetPoint(x, y, z)
 
-  * 右手坐标系![](./md_pic/coordinate.jpg)
-  * pitch轴 y轴为转轴 从y轴正向看向原点，逆时针方向为pitch轴正方向
-  * yaw轴 z轴为转轴 从z轴正向看向原点，逆时针方向为pitch轴正方向
-  * ![](./md_pic/rotations.png)
 * 设置临时目标点tempPoint = targetPoint
 * 循环迭代n次(10-20次)：
 
@@ -146,6 +152,12 @@ $$
 迭代，使z_{actual}逐渐逼近真实落点z_0
 $$
 
+---
+## 完整弹道模型
+
+
+
+---
 ## 文件说明
 
 │  .gitignore
@@ -178,6 +190,7 @@ $$
 
 |       rotations.png
 
+---
 ## 参考文献
 
 [1]RoboMaster 2019 AI Robot Platform
