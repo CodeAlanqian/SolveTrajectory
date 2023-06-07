@@ -50,7 +50,7 @@ float monoDirectionalAirResistanceModel(float s, float v, float angle)
 //TODO 完整弹道模型
 float completeAirResistanceModel(float s, float v, float angle)
 {
-    continue;
+    
 
 
 }
@@ -138,7 +138,7 @@ void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, f
             float r =  (st.r1 + st.r2)/2;   //理论上r1=r2 这里取个平均值
             tar_position[i].x = st.xw - r*cos(tmp_yaw);
             tar_position[i].y = st.yw - r*sin(tmp_yaw);
-            tar_position[i].z = st.zw
+            tar_position[i].z = st.zw;
             tar_position[i].yaw = tmp_yaw;
         }
 
@@ -214,9 +214,12 @@ int main()
     st.current_v = 18;
     st.current_pitch = 0;
     st.current_yaw = 0;
-    st.xw = 1.66568;
-    st.yw = 0.0159;
-    st.zw = -0.2898;
+    st.xw = 3.0;
+    // st.yw = 0.0159;
+    st.yw = 0;
+    // st.zw = -0.2898;
+    st.zw = 1.5;
+
     st.vxw = 0;
     st.vyw = 0;
     st.vzw = 0;
