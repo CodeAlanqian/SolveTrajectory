@@ -135,7 +135,7 @@ void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, f
             float r =  (st.r1 + st.r2)/2;   //理论上r1=r2 这里取个平均值
             tar_position[i].x = st.xw - r*cos(tmp_yaw);
             tar_position[i].y = st.yw - r*sin(tmp_yaw);
-            tar_position[i].z = st.zw
+            tar_position[i].z = st.zw;
             tar_position[i].yaw = tmp_yaw;
         }
 
