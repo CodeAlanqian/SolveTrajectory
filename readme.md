@@ -180,7 +180,7 @@ $$
 │      settings.json
 │      tasks.json
 │
-└─pic
+├─pic
 |       coordinate.jpg
 |       projectile.png
 |       projectile_model.png
