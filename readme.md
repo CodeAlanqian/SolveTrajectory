@@ -7,15 +7,23 @@
 给定目标位置坐标(x,y,z)，求解**出射角θ（炮台仰角）**
 
 ---
+
 本文基本约定：
+
 * 右手坐标系
 * <img src="./md_pic/coordinate.jpg" width="40%" height="40%" alt="右手系" align=center />
 * pitch轴 y轴为转轴 从y轴正向看向原点，逆时针方向为pitch轴正方向
 * yaw轴 z轴为转轴 从z轴正向看向原点，逆时针方向为pitch轴正方向
 * <img src="./md_pic/rotations.png" width="50%" height="50%" alt="旋转轴" align=center />
-* 某弹道竖直方向切面 $$s = \sqrt{x^2+y^2}$$ ， z为纵轴
+* 某弹道竖直方向切面 
+  $$
+  s = \sqrt{x^2+y^2}
+  $$
+
+   ， z为纵轴
 
 ---
+
 ## 理想弹道模型
 
 只考虑重力作用，弹道为抛物线
@@ -27,6 +35,7 @@ $$
 $$
 
 ---
+
 ## 单方向空气阻力模型
 
 <img src="./md_pic/projectile_model.png" width="80%" height="80%" alt="projectile_model" align=center />
@@ -113,12 +122,12 @@ $$
 $$
 
 ---
+
 ## 迭代重力-空气阻力补偿
 
 迭代过程：
 
 * 设置目标点targetPoint(x, y, z)
-
 * 设置临时目标点tempPoint = targetPoint
 * 循环迭代n次(10-20次)：
 
@@ -153,44 +162,34 @@ $$
 $$
 
 ---
+
 ## 完整弹道模型
 
-
-
 ---
+
 ## 文件说明
 
+```bash
 │  .gitignore
-
 │  ECterminal.c                     电控端文件
-
 │  readme.md
-
 │  SolveTrajectory.c              调试文件
-
 │  SolveTrajectory.h              头文件
-
 │
-
 ├─.vscode
-
 │      settings.json
-
 │      tasks.json
-
 │
-
 └─pic
-
 |       coordinate.jpg
-
 |       projectile.png
-
 |       projectile_model.png
-
 |       rotations.png
+```
+
 
 ---
+
 ## 参考文献
 
 [1]RoboMaster 2019 AI Robot Platform
@@ -201,4 +200,3 @@ $$
 [3][chenjunnn/rm_auto_aim: RoboMaster 装甲板自动瞄准算法模块 (github.com)](https://github.com/chenjunnn/rm_auto_aim)
 
 [4][chenjunnn/rm_serial_driver: RoboMaster 视觉系统与电控系统的串口通讯模块 (github.com)](https://github.com/chenjunnn/rm_serial_driver)
-
