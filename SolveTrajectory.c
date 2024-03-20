@@ -33,6 +33,12 @@ float monoDirectionalAirResistanceModel(float s, float v, float angle)
     float z;
     //t为给定v与angle时的飞行时间
     t = (float)((exp(st.k * s) - 1) / (st.k * v * cos(angle)));
+    if(t < 0)
+    {
+        //由于严重超出最大射程，计算过程中浮点数溢出，导致t变成负数
+        printf("[WRAN]: Exceeding the maximum range!\n");
+        return 0;
+    }
     //z为给定v与angle时的高度
     z = (float)(v * sin(angle) * t - GRAVITY * t * t / 2);
     printf("model %f %f\n", t, z);
@@ -50,8 +56,8 @@ float monoDirectionalAirResistanceModel(float s, float v, float angle)
 //TODO 完整弹道模型
 float completeAirResistanceModel(float s, float v, float angle)
 {
-    
 
+    return 0;
 
 }
 
@@ -75,6 +81,11 @@ float pitchTrajectoryCompensation(float s, float z, float v)
     {
         angle_pitch = atan2(z_temp, s); // rad
         z_actual = monoDirectionalAirResistanceModel(s, v, angle_pitch);
+        if(z_actual == 0)
+        {
+            angle_pitch = 0;
+            break;
+        }
         dz = 0.3*(z - z_actual);
         z_temp = z_temp + dz;
         printf("iteration num %d: angle_pitch %f, temp target z:%f, err of z:%f, s:%f\n",
@@ -84,6 +95,8 @@ float pitchTrajectoryCompensation(float s, float z, float v)
             break;
         }
     }
+    //重置t，防止下次调用会出现nan
+    t = 0;
     return angle_pitch;
 }
 
@@ -194,10 +207,12 @@ void autoSolveTrajectory(float *pitch, float *yaw, float *aim_x, float *aim_y, f
     *aim_x = tar_position[idx].x + st.vxw * timeDelay;
     *aim_y = tar_position[idx].y + st.vyw * timeDelay;
     //这里符号给错了
-    *pitch = -pitchTrajectoryCompensation(sqrt((*aim_x) * (*aim_x) + (*aim_y) * (*aim_y)) - st.s_bias,
+    float temp_pitch = -pitchTrajectoryCompensation(sqrt((*aim_x) * (*aim_x) + (*aim_y) * (*aim_y)) - st.s_bias,
             *aim_z + st.z_bias, st.current_v);
-    *yaw = (float)(atan2(*aim_y, *aim_x));
-
+    if(temp_pitch)
+        *pitch = temp_pitch;
+    if(*aim_x || *aim_y)
+        *yaw = (float)(atan2(*aim_y, *aim_x));
 }
 
 // 从坐标轴正向看向原点，逆时针方向为正
