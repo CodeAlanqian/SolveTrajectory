@@ -37,6 +37,8 @@ float monoDirectionalAirResistanceModel(float s, float v, float angle)
     {
         //由于严重超出最大射程，计算过程中浮点数溢出，导致t变成负数
         printf("[WRAN]: Exceeding the maximum range!\n");
+        //重置t，防止下次调用会出现nan
+        t = 0;
         return 0;
     }
     //z为给定v与angle时的高度
@@ -95,8 +97,6 @@ float pitchTrajectoryCompensation(float s, float z, float v)
             break;
         }
     }
-    //重置t，防止下次调用会出现nan
-    t = 0;
     return angle_pitch;
 }
 
