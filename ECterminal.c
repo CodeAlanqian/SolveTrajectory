@@ -36,6 +36,7 @@ float monoDirectionalAirResistanceModel(float s, float v, float angle)
     if(t < 0)
     {
         //目标点超出最大射程
+        t = 0;
         return 0;
     }
     //z为给定v与angle时的高度
@@ -91,7 +92,6 @@ float pitchTrajectoryCompensation(float s, float z, float v)
             break;
         }
     }
-    t = 0;
     return angle_pitch;
 }
 
